@@ -2,12 +2,12 @@ import hashlib
 import random
 
 
-def hash_key(key, m=8):
+def hash_key(key, m=5):
     return int(hashlib.sha1(key.encode()).hexdigest(), 16) % (2 ** m)
 
 
 class Node:
-    def __init__(self, node_id, m=8):
+    def __init__(self, node_id, m=5):
         self.id = node_id
         self.m = m
         self.successor = self
@@ -17,7 +17,6 @@ class Node:
         return f"Node({self.id})"
 
     def join(self, known_node):
-
         if known_node:
             self.init_finger_table(known_node)
         else:
@@ -27,7 +26,6 @@ class Node:
         self.successor = known_node.find_successor(self.id)
 
     def find_successor(self, key_id):
-
         if self == self.successor:
             return self
         if self.id < key_id <= self.successor.id or (
@@ -38,7 +36,6 @@ class Node:
             return self.successor.find_successor(key_id)
 
     def stabilize(self):
-
         x = self.successor.predecessor
         if x and self.id < x.id < self.successor.id:
             self.successor = x
@@ -50,12 +47,11 @@ class Node:
 
 
 class ChordRing:
-    def __init__(self, m=8):
+    def __init__(self, m=5):
         self.m = m
         self.nodes = []
 
     def add_node(self, key):
-
         node_id = hash_key(str(key), self.m)
         new_node = Node(node_id, self.m)
 
@@ -72,19 +68,20 @@ class ChordRing:
         return new_node
 
     def find_node(self, key):
-
         if not self.nodes:
             return None
         key_id = hash_key(str(key), self.m)
-        return self.nodes[0].find_successor(key_id)
-
-
+        sorted_nodes = sorted(self.nodes, key=lambda x: x.id)
+        for node in sorted_nodes:
+            if key_id <= node.id:
+                return node
+        return sorted_nodes[0]
 def test():
-    ring = ChordRing(m=5) 
+    ring = ChordRing(m=5)
 
-    n1 = ring.add_node("10")  
-    n2 = ring.add_node("20")   
-    n3 = ring.add_node("30") 
+    n1 = ring.add_node("10")
+    n2 = ring.add_node("20")
+    n3 = ring.add_node("30")
 
     print("Danh sách node trong hệ thống:")
     for node in sorted(ring.nodes, key=lambda x: x.id):
@@ -96,7 +93,6 @@ def test():
     for k in keys:
         node = ring.find_node(k)
         print(f" Key '{k}' (hash={hash_key(k, 5)}) -> {node}")
-
 
 
 if __name__ == "__main__":
